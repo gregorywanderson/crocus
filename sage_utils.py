@@ -7,6 +7,9 @@ import datetime as dt
 import pandas as pd
 import sage_data_client
 
+# local
+from crocus_sites import CROCUS_SITES, TEROS_DEPTHS, VSN_TO_SITE
+
 # Note: The Sage API uses SAGE_MISSING as a fill value for missing measurements.
 # All query functions replace this with NaN before returning.
 
@@ -21,108 +24,6 @@ SAGE_MISSING = -9999.9  # Sage API fill value for missing data
 #   - AQT current (post-2026):   5-minute → no change
 
 RESAMPLE_INTERVAL = '5min'
-
-
-CROCUS_NODES = { 
-    'ATMOS': 'W0A4',  # Argonne Testbed for Multiscale Observational Science
-    'BIG':   'W0A0',  # Blacks in Green (West Woodlawn)
-    'CCICS': 'W08B',  # Carruthers Center for Inner City Studies - Bronzeville (NEIU satellite)
-    'CSU':   'W08E',  # Chicago State University
-    'HUM':   'W0A1',  # Humboldt Park 
-    'NEIU':  'W08D',  # Northeastern Illinois University
-    'NU':    'W099',  # Northwestern University
-    'SHEDD': 'W09E',  # Shedd Aquarium
-    'UIC':   'W096',  # University of Illinois Chicago
-}
-
-# ---------------------------------------------------------------------------
-# Site-specific metadata
-# ---------------------------------------------------------------------------
-
-# Sap flow serial number to meaningful label mapping per node.
-# Each sap flow meter uses a thermal dissipation probe with two sensors
-# at different depths within the tree (inner and outer xylem).
-# Update species labels here as new nodes are characterized.
-
-SAPFLOW_LABELS = {
-    'W08D': {
-        'SX61NA0C': 'white_oak_1',
-        'SX61NA0X': 'white_oak_2',
-        'SX61NA0V': 'american_elm_1',
-        'SX61NA01': 'sugar_maple_1',
-        'SX61NA0J': 'sugar_maple_2',
-        'SX61NA0N': 'sugar_maple_3',
-    },
-    'W08E': {
-        'SX61NA0D': 'cottonwood_1',
-        'SX61NA0W': 'cottonwood_2',
-        'SX61NA0E': 'cottonwood_3',
-        'SX61NA0P': 'american_elm_1',
-        'SX61NA0H': 'american_elm_2',
-        'SX61NA08': 'maple_1',
-        'SX61NA0T': 'maple_2',
-        'SX61NA0A': 'maple_3',
-    },
-    'W099': {
-        'SX61NA0Y': 'maple_1',
-        'SX61NA0F': 'maple_2',
-        'SX61NA07': 'oak_1',
-        'SX61NA0G': 'oak_2',
-        'SX61NA0L': 'maple_3',
-        'SX61N501': 'maple_4',
-    },
-    'W096': {
-        'SX61NA0B': 'american_elm_1',
-        'SX61NA0R': 'honey_locust_1',
-        'SX61NA0M': 'honey_locust_2',
-        'SX61NA0S': 'maple_1',
-        'SX61NA0K': 'maple_2',
-        'SX61NA05': 'honey_locust_3',
-        'SX61NA0O': 'american_elm_2',
-    },
-    'W0A0': {
-        'SX61NA0U': 'tree_1',   # species TBD
-        'SX61NA09': 'tree_2',   # species TBD
-        'SX61NA0I': 'tree_3',   # species TBD
-    },
-}
-
-# MFR node serial number to meaningful label mapping per node.
-# Update site labels here as sub-site descriptions become available.
-MFR_LABELS = {
-    'W08D': {
-        'MNLA4O107': 'savannah',  # Swamp White Oak Savannah (south)
-        'MNLA4O108': 'lawn',      # Lawn near Administrative building
-    },
-    'W08E': {
-        'MNLA4O102': 'non_prairie',
-        'MNLA4O103': 'prairie',
-    },
-    'W099': {
-        'MNLA4O104': 'site_1',    # sub-site TBD
-    },
-    'W096': {
-        'MNLA4O105': 'site_1',    # sub-site TBD
-        'MNLA4O106': 'site_2',    # sub-site TBD
-    },
-    'W0A0': {
-        'MNLA4O10A': 'site_1',    # sub-site TBD
-        'MNLA4O10B': 'site_2',    # sub-site TBD
-        'MNLA4O10C': 'site_3',    # sub-site TBD
-    },
-}
-
-# Teros54 depth column rename mapping
-TEROS_DEPTHS = {
-    'temp_d1': 'temp_15cm',
-    'temp_d2': 'temp_30cm',
-    'temp_d3': 'temp_45cm',
-    'temp_d4': 'temp_60cm',
-    'vwc_d1':  'vwc_15cm',
-    'vwc_d2':  'vwc_30cm',
-    'vwc_d3':  'vwc_45cm',
-    'vwc_d4':  'vwc_60cm',
-}
 
 
 # ---------------------------------------------------------------------------
@@ -314,13 +215,10 @@ def query_sapflow(vsn, start, end=None):
 
     Raises
     ------
-    ValueError if vsn is not in SAPFLOW_LABELS.
+    ValueError if vsn is not found in CROCUS_SITES or site has no sap flow data.
     """
-    if vsn not in SAPFLOW_LABELS:
-        raise ValueError(
-            f"No sap flow label mapping for node '{vsn}'. "
-            f"Known nodes: {list(SAPFLOW_LABELS.keys())}"
-        )
+    if vsn not in VSN_TO_SITE or not CROCUS_SITES[VSN_TO_SITE[vsn]].has_sapflow:
+        raise ValueError(f"No sap flow data configured for VSN '{vsn}'.")
 
     query_kwargs = dict(
         start=start,
@@ -336,8 +234,11 @@ def query_sapflow(vsn, start, end=None):
 
     if df.empty:
         return {}
-
-    labels = SAPFLOW_LABELS[vsn]
+    
+    site   = VSN_TO_SITE.get(vsn)
+    if site is None:
+        raise ValueError(f"No site mapping found for VSN '{vsn}'.")
+    labels = CROCUS_SITES[site].sapflow
     result = {}
 
     for serial, label in labels.items():
@@ -414,13 +315,12 @@ def query_mfr(vsn, start, end=None):
 
     Raises
     ------
-    ValueError if vsn is not in MFR_LABELS.
+    Raises
+    ------
+    ValueError if vsn is not found in CROCUS_SITES or site has no MFR data.
     """
-    if vsn not in MFR_LABELS:
-        raise ValueError(
-            f"No MFR label mapping for node '{vsn}'. "
-            f"Known nodes: {list(MFR_LABELS.keys())}"
-        )
+    if vsn not in VSN_TO_SITE or not CROCUS_SITES[VSN_TO_SITE[vsn]].has_mfr:
+        raise ValueError(f"No MFR data configured for VSN '{vsn}'.")
 
     query_kwargs = dict(
         start=start,
@@ -445,7 +345,10 @@ def query_mfr(vsn, start, end=None):
     if df.empty:
         return {}
 
-    labels = MFR_LABELS[vsn]
+    site   = VSN_TO_SITE.get(vsn)
+    if site is None:
+        raise ValueError(f"No site mapping found for VSN '{vsn}'.")
+    labels = CROCUS_SITES[site].mfr
     result = {}
 
     for serial, label in labels.items():
