@@ -5,24 +5,27 @@ Site-specific metadata for the CROCUS (Community Research on Climate and
 Urban Science) urban field network in Chicago, Illinois.
 
 Each site is defined as a CROCUSSite instance with attributes for the
-Sage/Waggle node ID, geographic coordinates, sensor availability, and
-sensor-specific metadata (sap flow species labels, MFR sub-site labels).
+Sage/Waggle Virtual Sage Node ID (VSN), geographic coordinates, sensor
+availability flags, and sensor-specific metadata (sap flow species labels,
+MFR sub-site labels).
 
 Update this file as new nodes are added or site descriptions become available.
 
 Usage
 -----
-    from crocus_sites import NEIU, CROCUS_SITES
+    from crocus_sites import NEIU, ALL_SITES
 
     # Direct access
     print(NEIU.vsn)          # 'W08D'
     print(NEIU.lat)          # 41.9803
+    print(NEIU.has_mfr)      # True
 
-    # Iterate over all sites with a specific sensor
-    wxt_sites = [name for name, site in CROCUS_SITES.items() if site.has_wxt]
+    # Iterate over all sites
+    for site in ALL_SITES:
+        print(f"{site.abbr:<8} {site.vsn}  {site.full_name}")
 
-    # Look up by abbreviation
-    site = CROCUS_SITES['NEIU']
+    # Filter by sensor type
+    mfr_sites = [site for site in ALL_SITES if site.has_mfr]
 """
 
 # Standard library
@@ -45,32 +48,45 @@ class CROCUSSite:
         Sage/Waggle Virtual Sage Node ID, e.g. 'W08D'
     full_name : str
         Full descriptive name of the site.
+    abbr : str
+        Short site abbreviation, e.g. 'NEIU'
     lat : float
         Latitude in decimal degrees (WGS84).
     lon : float
         Longitude in decimal degrees (WGS84), negative for west.
     has_aqt : bool
-        True if site has an AQT air quality sensor.
+        True if site has an AQT air quality sensor. Default True.
     has_wxt : bool
-        True if site has a WXT weather transmitter.
+        True if site has a WXT weather transmitter. Default True.
+    has_raingauge : bool
+        True if site has an RG-15 optical rain gauge. Default True.
+    has_bme680 : bool
+        True if site has a BME680 temp/humidity/pressure/gas sensor. Default True.
     has_mfr : bool
-        True if site has one or more MFR nodes.
+        True if site has one or more MFR nodes. Default False.
     has_sapflow : bool
-        True if site has one or more sap flow meters.
+        True if site has one or more sap flow meters. Default False.
     sapflow : dict, optional
         Mapping of sap flow serial number to species label,
         e.g. {'SX61NA0C': 'white_oak_1'}. Required if has_sapflow=True.
     mfr : dict, optional
-        Mapping of MFR serial number to sub-site label,
-        e.g. {'MNLA4O107': 'savannah'}. Required if has_mfr=True.
+        Mapping of MFR serial number to sub-site info dict:
+        e.g. {'MNLA4O107': {'label': 'savannah', 'lat': 41.981, 'lon': -87.717}}
+        Required if has_mfr=True.
     """
     vsn:       str
     full_name: str
+    abbr:      str
     lat:       float
     lon:       float
 
-    has_aqt:     bool = False
-    has_wxt:     bool = False
+    # Standard Waggle node hardware — True by default
+    has_aqt:       bool = True
+    has_wxt:       bool = True
+    has_raingauge: bool = True
+    has_bme680:    bool = True
+
+    # Site-specific additions — False by default
     has_mfr:     bool = False
     has_sapflow: bool = False
 
@@ -111,20 +127,18 @@ TEROS_DEPTHS = {
 ATMOS = CROCUSSite(
     vsn       = 'W0A4',
     full_name = 'Argonne Testbed for Multiscale Observational Science',
-    lat       = 41.7000,   # TBD — approximate
-    lon       = -87.9800,  # TBD — approximate
-    has_aqt   = True,
-    has_wxt   = True,
+    abbr      = 'ATMOS',
+    lat       = 41.701597727,
+    lon       = -87.995233141,
 )
 
 BIG = CROCUSSite(
     vsn       = 'W0A0',
     full_name = 'Blacks in Green (West Woodlawn)',
-    lat       = 41.7766,   # TBD
-    lon       = -87.6298,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
-    has_mfr   = True,
+    abbr      = 'BIG',
+    lat       = 41.777014004,
+    lon       = -87.609733534,
+    has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
         'SX61NA0U': 'tree_1',   # species TBD
@@ -132,29 +146,27 @@ BIG = CROCUSSite(
         'SX61NA0I': 'tree_3',   # species TBD
     },
     mfr       = {
-        'MNLA4O10A': 'site_1',  # sub-site TBD
-        'MNLA4O10B': 'site_2',  # sub-site TBD
-        'MNLA4O10C': 'site_3',  # sub-site TBD
+        'MNLA4O10A': {'label': 'champlain', 'lat': 41.778703, 'lon': -87.609806},
+        'MNLA4O10B': {'label': 'delta',     'lat': 41.777239, 'lon': -87.608681},
+        'MNLA4O10C': {'label': 'langley',   'lat': 41.778769, 'lon': -87.608217},
     },
 )
 
 CCICS = CROCUSSite(
     vsn       = 'W08B',
     full_name = 'Carruthers Center for Inner City Studies — Bronzeville (NEIU satellite)',
-    lat       = 41.8318,   # TBD
-    lon       = -87.6180,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
+    abbr      = 'CCICS',
+    lat       = 41.822951506,
+    lon       = -87.609693291,
 )
 
 CSU = CROCUSSite(
     vsn       = 'W08E',
     full_name = 'Chicago State University',
-    lat       = 41.7232,   # TBD
-    lon       = -87.6050,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
-    has_mfr   = True,
+    abbr      = 'CSU',
+    lat       = 41.719837344,
+    lon       = -87.612858510,
+    has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
         'SX61NA0D': 'cottonwood_1',
@@ -167,28 +179,28 @@ CSU = CROCUSSite(
         'SX61NA0A': 'maple_3',
     },
     mfr       = {
-        'MNLA4O102': 'non_prairie',
-        'MNLA4O103': 'prairie',
+        'MNLA4O102': {'label': 'non_prairie', 'lat': 41.719631, 'lon': -87.612884},
+        'MNLA4O103': {'label': 'prairie',     'lat': 41.719892, 'lon': -87.613022},
     },
 )
 
 HUM = CROCUSSite(
     vsn       = 'W0A1',
     full_name = 'Humboldt Park',
+    abbr      = 'HUM',
     lat       = 41.9000,   # TBD
     lon       = -87.7200,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
 )
+
 
 NEIU = CROCUSSite(
     vsn       = 'W08D',
     full_name = 'Northeastern Illinois University',
-    lat       = 41.9803,
-    lon       = -87.7170,
-    has_aqt   = True,
-    has_wxt   = True,
-    has_mfr   = True,
+    abbr      = 'NEIU',
+    lat       = 41.980532992,
+    lon       = -87.716623746,
+    has_raingauge = False,  # RPi currently inactive
+    has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
         'SX61NA0C': 'white_oak_1',
@@ -199,19 +211,21 @@ NEIU = CROCUSSite(
         'SX61NA0N': 'sugar_maple_3',
     },
     mfr       = {
-        'MNLA4O107': 'savannah',  # Swamp White Oak Savannah (south)
-        'MNLA4O108': 'lawn',      # Lawn near Administrative building
+        # NB: CSV labels MNLA4O107 as North and MNLA4O108 as South, but VWC
+        # saturation data confirms the savannah (clay soil) is the southern
+        # site. Current mapping follows the data. Verify on Tuesday 2026-05-26.
+        'MNLA4O107': {'label': 'savannah', 'lat': 41.981459, 'lon': -87.717300},
+        'MNLA4O108': {'label': 'lawn',     'lat': 41.977505, 'lon': -87.716479},
     },
 )
 
 NU = CROCUSSite(
     vsn       = 'W099',
     full_name = 'Northwestern University',
-    lat       = 42.0565,   # TBD
-    lon       = -87.6753,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
-    has_mfr   = True,
+    abbr      = 'NU',
+    lat       = 42.051407767,
+    lon       = -87.677659396,
+    has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
         'SX61NA0Y': 'maple_1',
@@ -222,27 +236,25 @@ NU = CROCUSSite(
         'SX61N501': 'maple_4',
     },
     mfr       = {
-        'MNLA4O104': 'site_1',   # sub-site TBD
+        'MNLA4O104': {'label': 'grove', 'lat': 42.052580, 'lon': -87.676820},
     },
 )
 
 SHEDD = CROCUSSite(
     vsn       = 'W09E',
     full_name = 'Shedd Aquarium',
-    lat       = 41.8676,   # TBD
-    lon       = -87.6139,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
+    abbr      = 'SHEDD',
+    lat       = 41.868043147,
+    lon       = -87.613391117,
 )
 
 UIC = CROCUSSite(
     vsn       = 'W096',
     full_name = 'University of Illinois Chicago',
-    lat       = 41.8708,   # TBD
-    lon       = -87.6505,  # TBD
-    has_aqt   = True,
-    has_wxt   = True,
-    has_mfr   = True,
+    abbr      = 'UIC',
+    lat       = 41.868532807,
+    lon       = -87.645894840,
+    has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
         'SX61NA0B': 'american_elm_1',
@@ -254,27 +266,14 @@ UIC = CROCUSSite(
         'SX61NA0O': 'american_elm_2',
     },
     mfr       = {
-        'MNLA4O105': 'site_1',   # sub-site TBD
-        'MNLA4O106': 'site_2',   # sub-site TBD
+        'MNLA4O105': {'label': 'greenhouse',    'lat': 41.869385, 'lon': -87.645848},
+        'MNLA4O106': {'label': 'parking_lot_5', 'lat': 41.868385, 'lon': -87.649106},
     },
 )
 
 
 # ---------------------------------------------------------------------------
-# Master site dictionary — for programmatic access and iteration
+# All sites — for iteration and filtering
 # ---------------------------------------------------------------------------
 
-CROCUS_SITES = {
-    'ATMOS': ATMOS,
-    'BIG':   BIG,
-    'CCICS': CCICS,
-    'CSU':   CSU,
-    'HUM':   HUM,
-    'NEIU':  NEIU,
-    'NU':    NU,
-    'SHEDD': SHEDD,
-    'UIC':   UIC,
-}
-
-# Reverse lookup: VSN → site abbreviation
-VSN_TO_SITE = {site.vsn: name for name, site in CROCUS_SITES.items()}
+ALL_SITES = [ATMOS, BIG, CCICS, CSU, HUM, NEIU, NU, SHEDD, UIC]
