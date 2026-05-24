@@ -8,7 +8,7 @@ import pandas as pd
 import sage_data_client
 
 # local
-from crocus_sites import CROCUS_SITES, TEROS_DEPTHS, VSN_TO_SITE
+from crocus_sites import TEROS_DEPTHS
 
 # Note: The Sage API uses SAGE_MISSING as a fill value for missing measurements.
 # All query functions replace this with NaN before returning.
@@ -182,8 +182,7 @@ def query_wxt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
 
     return df_wide
 
-
-def query_sapflow(vsn, start, end=None):
+def query_sapflow(site, start, end=None):
     """
     Query sap flow sensor data from the Sage/Waggle API for a single node.
 
@@ -199,8 +198,8 @@ def query_sapflow(vsn, start, end=None):
 
     Parameters
     ----------
-    vsn : str
-        Node ID, e.g. 'W08D'
+    site : CrocusSite
+        Site object from crocus_sites.py, e.g. NEIU
     start : str
         Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1h'
     end : str, optional
@@ -215,16 +214,18 @@ def query_sapflow(vsn, start, end=None):
 
     Raises
     ------
-    ValueError if vsn is not found in CROCUS_SITES or site has no sap flow data.
+    ValueError if site has no sap flow data.
     """
-    if vsn not in VSN_TO_SITE or not CROCUS_SITES[VSN_TO_SITE[vsn]].has_sapflow:
-        raise ValueError(f"No sap flow data configured for VSN '{vsn}'.")
+    if not site.has_sapflow:
+        raise ValueError(
+            f"{site.full_name} has no sap flow sensors configured."
+        )
 
     query_kwargs = dict(
         start=start,
         filter={
             'name': 'uncorrected_inner|uncorrected_outer|battery_voltage',
-            'vsn': vsn,
+            'vsn':  site.vsn,
         }
     )
     if end is not None:
@@ -234,14 +235,10 @@ def query_sapflow(vsn, start, end=None):
 
     if df.empty:
         return {}
-    
-    site   = VSN_TO_SITE.get(vsn)
-    if site is None:
-        raise ValueError(f"No site mapping found for VSN '{vsn}'.")
-    labels = CROCUS_SITES[site].sapflow
+
     result = {}
 
-    for serial, label in labels.items():
+    for serial, info in site.sapflow.items():
         subset = df[df['meta.serial_number_tag'] == serial].copy()
         if subset.empty:
             continue
@@ -252,23 +249,20 @@ def query_sapflow(vsn, start, end=None):
             values='value',
             aggfunc='mean'
         ).astype(float)
-        # Replace Sage missing value flag with NaN
         df_wide = df_wide.replace(SAGE_MISSING, float('nan'))
-
         df_wide.index = pd.to_datetime(df_wide.index, utc=True)
         df_wide = df_wide.rename(columns={
             'uncorrected_inner': 'inner',
             'uncorrected_outer': 'outer',
         })
-        df_wide['vsn']    = vsn
+        df_wide['vsn']    = site.vsn
         df_wide['serial'] = serial
 
-        result[label] = df_wide
+#        result[info['label']] = df_wide
+        result[info] = df_wide 
 
     return result
-
-
-def query_mfr(vsn, start, end=None):
+def query_mfr(site, start, end=None):
     """
     Query Multi-Function Research (MFR) node data from the Sage/Waggle API.
 
@@ -283,7 +277,7 @@ def query_mfr(vsn, start, end=None):
       - MFR Node: battery voltage (V) and solar voltage (V)
 
     Multiple MFR nodes may be connected to a single waggle node; each is
-    returned as a separate DataFrame keyed by site label.
+    returned as a separate DataFrame keyed by sub-site label.
 
     Note: QC flags are available in the published CSV/NetCDF dataset but
     are not applied here. Treat returned values as raw observations.
@@ -293,8 +287,8 @@ def query_mfr(vsn, start, end=None):
 
     Parameters
     ----------
-    vsn : str
-        Node ID, e.g. 'W08D'
+    site : CrocusSite
+        Site object from crocus_sites.py, e.g. NEIU
     start : str
         Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1h'
     end : str, optional
@@ -302,7 +296,7 @@ def query_mfr(vsn, start, end=None):
 
     Returns
     -------
-    dict of pd.DataFrame, keyed by site label (e.g. 'savannah', 'lawn').
+    dict of pd.DataFrame, keyed by sub-site label (e.g. 'savannah', 'lawn').
     Each DataFrame has a UTC DatetimeIndex and columns:
         air_temp, pressure, humidity, vpd,
         in_shortwave, out_shortwave, in_longwave, out_longwave,
@@ -315,12 +309,12 @@ def query_mfr(vsn, start, end=None):
 
     Raises
     ------
-    Raises
-    ------
-    ValueError if vsn is not found in CROCUS_SITES or site has no MFR data.
+    ValueError if site has no MFR data.
     """
-    if vsn not in VSN_TO_SITE or not CROCUS_SITES[VSN_TO_SITE[vsn]].has_mfr:
-        raise ValueError(f"No MFR data configured for VSN '{vsn}'.")
+    if not site.has_mfr:
+        raise ValueError(
+            f"{site.full_name} has no MFR nodes configured."
+        )
 
     query_kwargs = dict(
         start=start,
@@ -334,7 +328,7 @@ def query_mfr(vsn, start, end=None):
                 'vwc_d1|vwc_d2|vwc_d3|vwc_d4|'
                 'battery_voltage|solar_voltage'
             ),
-            'vsn': vsn,
+            'vsn': site.vsn,
         }
     )
     if end is not None:
@@ -345,13 +339,9 @@ def query_mfr(vsn, start, end=None):
     if df.empty:
         return {}
 
-    site   = VSN_TO_SITE.get(vsn)
-    if site is None:
-        raise ValueError(f"No site mapping found for VSN '{vsn}'.")
-    labels = CROCUS_SITES[site].mfr
     result = {}
 
-    for serial, label in labels.items():
+    for serial, info in site.mfr.items():
         subset = df[df['meta.serial_number_tag'] == serial].copy()
         if subset.empty:
             continue
@@ -362,27 +352,91 @@ def query_mfr(vsn, start, end=None):
             values='value',
             aggfunc='mean'
         ).astype(float)
-        # Replace Sage missing value flag with NaN
         df_wide = df_wide.replace(SAGE_MISSING, float('nan'))
-
         df_wide.index = pd.to_datetime(df_wide.index, utc=True)
         df_wide = df_wide.rename(columns={
-            'air_temperature':       'air_temp',
-            'barometric_pressure':   'pressure',
-            'relative_humidity':     'humidity',
+            'air_temperature':         'air_temp',
+            'barometric_pressure':     'pressure',
+            'relative_humidity':       'humidity',
             'vapour_pressure_deficit': 'vpd',
-            'in_shortwave':          'in_shortwave',
-            'out_shortwave':         'out_shortwave',
-            'in_longwave':           'in_longwave',
-            'out_longwave':          'out_longwave',
-            'heat_flux':             'heat_flux',
-            'battery_voltage':       'battery_voltage',
-            'solar_voltage':         'solar_voltage',
+            'in_shortwave':            'in_shortwave',
+            'out_shortwave':           'out_shortwave',
+            'in_longwave':             'in_longwave',
+            'out_longwave':            'out_longwave',
+            'heat_flux':               'heat_flux',
+            'battery_voltage':         'battery_voltage',
+            'solar_voltage':           'solar_voltage',
             **TEROS_DEPTHS,
         })
-        df_wide['vsn']    = vsn
+        df_wide['vsn']    = site.vsn
         df_wide['serial'] = serial
 
-        result[label] = df_wide
-
+        result[info['label']] = df_wide
+        
     return result
+
+def query_raingauge(site, start, end=None):
+    """
+    Query RG-15 optical rain gauge data from the Sage/Waggle API.
+
+    The RG-15 reports only during rain events — dry periods return no data.
+    Reporting interval is approximately 30 seconds during active rainfall.
+
+    Parameters
+    ----------
+    site : CrocusSite
+        Site object from crocus_sites.py, e.g. CCICS
+    start : str
+        Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1d'
+    end : str, optional
+        End datetime. If omitted, defaults to now.
+
+    Returns
+    -------
+    pd.DataFrame with UTC DatetimeIndex and columns:
+        event_acc  — rainfall accumulation during current event (mm)
+        total_acc  — cumulative total since last reset (mm)
+        rint       — rain rate intensity (mm/hr)
+        vsn        — Sage/Waggle node ID
+    Returns an empty DataFrame if no rain events occurred in the period.
+
+    Raises
+    ------
+    ValueError if site has no raingauge.
+    """
+    if not site.has_raingauge:
+        raise ValueError(
+            f"{site.full_name} has no rain gauge configured."
+        )
+
+    query_kwargs = dict(
+        start=start,
+        filter={
+            'name': (
+                'env.raingauge.event_acc|'
+                'env.raingauge.total_acc|'
+                'env.raingauge.rint'
+            ),
+            'vsn': site.vsn,
+        }
+    )
+    if end is not None:
+        query_kwargs['end'] = end
+
+    df = sage_data_client.query(**query_kwargs)
+
+    if df.empty:
+        return pd.DataFrame()
+
+    df_wide = df.pivot_table(
+        index='timestamp',
+        columns='name',
+        values='value',
+        aggfunc='mean'
+    ).astype(float)
+    df_wide = df_wide.replace(SAGE_MISSING, float('nan'))
+    df_wide.index = pd.to_datetime(df_wide.index, utc=True)
+    df_wide.columns = ['event_acc', 'rint', 'total_acc']
+    df_wide['vsn'] = site.vsn
+
+    return df_wide
