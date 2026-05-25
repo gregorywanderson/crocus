@@ -46,7 +46,7 @@ def last_n_hours(hours=1):
     Examples
     --------
     >>> start, end = last_n_hours(6)
-    >>> df = query_aqt('W08D', start, end)
+    >>> df = query_aqt(NEIU, start, end)
     """
     now   = dt.datetime.now(dt.timezone.utc)
     start = now - dt.timedelta(hours=hours)
@@ -57,14 +57,14 @@ def last_n_hours(hours=1):
 # Query functions
 # ---------------------------------------------------------------------------
 
-def query_aqt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
+def query_aqt(site, start, end=None, resample=RESAMPLE_INTERVAL):
     """
     Query AQT air quality data from the Sage/Waggle API for a single node.
 
     Parameters
     ----------
-    vsn : str
-        Node ID, e.g. 'W08D'
+    site: CROCUSSite
+         Site object from crocus_sites.py, e.g. NEIU
     start : str
         Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1h'
     end : str, optional
@@ -79,6 +79,14 @@ def query_aqt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
     and columns:
         humidity, pressure, temp, co, no, no2, o3, pm1, pm10, pm25, vsn, sensor
     """
+    
+    vsn = site.vsn
+    
+    if not site.has_aqt:
+        raise ValueError(
+            f"{site.full_name} has no AQT configured."
+        )
+    
     exclude = {'aqt.house.datetime', 'aqt.house.uptime'}
 
     query_kwargs = dict(
@@ -92,6 +100,10 @@ def query_aqt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
         query_kwargs['end'] = end
 
     df = sage_data_client.query(**query_kwargs)
+    
+    if df.empty:
+        print(f"No AQT data returned for {vsn}.")
+        return pd.DataFrame()
 
     df_wide = df[~df['name'].isin(exclude)].pivot_table(
         index='timestamp',
@@ -118,7 +130,7 @@ def query_aqt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
     return df_wide
 
 
-def query_wxt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
+def query_wxt(site, start, end=None, resample=RESAMPLE_INTERVAL):
     """
     Query WXT weather data from the Sage/Waggle API for a single node.
     NB: Historical WXT data (pre-2025 approx.) was sampled at >1Hz,
@@ -128,8 +140,8 @@ def query_wxt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
 
     Parameters
     ----------
-    vsn : str
-        Node ID, e.g. 'W08D'
+    site : CROCUSSite
+         Site object from crocus_sites.py, e.g. NEIU
     start : str
         Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1h'
     end : str, optional
@@ -144,6 +156,13 @@ def query_wxt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
      and columns:
         humidity, pressure, temp, rain, wind_dir, wind_speed, vsn, sensor
     """
+    
+    vsn = site.vsn
+
+    if not site.has_wxt:
+        raise ValueError(
+            f"{site.full_name} has no WXT configured."
+        )
 
     query_kwargs = dict(
         start=start,
@@ -158,6 +177,10 @@ def query_wxt(vsn, start, end=None, resample=RESAMPLE_INTERVAL):
         query_kwargs['end'] = end
 
     df = sage_data_client.query(**query_kwargs)
+    
+    if df.empty:
+        print(f"No WXT data returned for {vsn}.")
+        return pd.DataFrame()
 
     df_wide = df.pivot_table(
         index='timestamp',
@@ -258,10 +281,11 @@ def query_sapflow(site, start, end=None):
         df_wide['vsn']    = site.vsn
         df_wide['serial'] = serial
 
-#        result[info['label']] = df_wide
         result[info] = df_wide 
 
     return result
+
+
 def query_mfr(site, start, end=None):
     """
     Query Multi-Function Research (MFR) node data from the Sage/Waggle API.
