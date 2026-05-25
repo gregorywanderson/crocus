@@ -59,7 +59,11 @@ def last_n_hours(hours=1):
 
 def query_aqt(site, start, end=None, resample=RESAMPLE_INTERVAL):
     """
-    Query AQT air quality data from the Sage/Waggle API for a single node.
+    Query Vaisala AQT530 air quality transmitter data from the Sage/Waggle API.
+    Returns PM1, PM2.5, PM10, CO, NO, NO2, O3, temperature, humidity and
+    pressure resampled to a consistent 5-minute resolution.
+    NB: Some nodes have PM sensors that have stopped functioning — check
+    site status before interpreting PM data.
 
     Parameters
     ----------
@@ -132,11 +136,11 @@ def query_aqt(site, start, end=None, resample=RESAMPLE_INTERVAL):
 
 def query_wxt(site, start, end=None, resample=RESAMPLE_INTERVAL):
     """
-    Query WXT weather data from the Sage/Waggle API for a single node.
-    NB: Historical WXT data (pre-2025 approx.) was sampled at >1Hz,
-    resulting in ~1M rows per day. Current data is averaged to 5-minute
-    intervals server-side. The 5-minute resample in query_wxt() handles
-    both cases correctly.
+    Query Vaisala WXT536 weather transmitter data from the Sage/Waggle API.
+    Returns temperature, humidity, pressure, rain accumulation, wind direction
+    and wind speed resampled to a consistent 5-minute resolution.
+    NB: Historical WXT data (pre-2026) was sampled at >1Hz — resampling
+    is essential for historical queries.
 
     Parameters
     ----------
