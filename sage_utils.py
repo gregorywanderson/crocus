@@ -468,3 +468,83 @@ def query_raingauge(site, start, end=None):
     df_wide['vsn'] = site.vsn
 
     return df_wide
+
+
+def query_bme680(site, start, end=None, resample=RESAMPLE_INTERVAL):
+    """
+    Query BME680 environmental sensor data from the Sage/Waggle API.
+
+    The BME680 is mounted in a radiation shield external to the node enclosure — providing
+    ambient temperature, humidity, pressure measurements, and a broadband gas resistance
+    (a proxy for VOC/combustion load, not calibrated to specific compounds).
+
+    Parameters
+    ----------
+    site : CROCUSSite
+        Site object from crocus_sites.py, e.g. NEIU
+    start : str
+        Start datetime, absolute e.g. '2023-06-01' or relative e.g. '-1h'
+    end : str, optional
+        End datetime. If omitted, defaults to now.
+    resample : str, optional
+        Pandas offset string for output resolution, e.g. '1min', '5min', '1h'.
+        Default is RESAMPLE_INTERVAL.
+
+    Returns
+    -------
+    pd.DataFrame resampled to `resample` interval with UTC DatetimeIndex
+    and columns:
+        temp, humidity, pressure, gas_resistance, vsn, sensor
+    Returns an empty DataFrame if no data is found.
+
+    Raises
+    ------
+    ValueError if site has no BME680 configured.
+    """
+    if not site.has_bme680:
+        raise ValueError(
+            f"{site.full_name} has no BME680 configured."
+        )
+
+    query_kwargs = dict(
+        start=start,
+        filter={
+            'name': (
+                'env.temperature|env.relative_humidity|'
+                'env.pressure|env.gas_resistance'
+            ),
+            'vsn':    site.vsn,
+            'sensor': 'bme680',
+        }
+    )
+    if end is not None:
+        query_kwargs['end'] = end
+
+    df = sage_data_client.query(**query_kwargs)
+
+    if df.empty:
+        print(f"No BME680 data returned for {site.vsn}.")
+        return pd.DataFrame()
+
+    df_wide = df.pivot_table(
+        index='timestamp',
+        columns='name',
+        values='value',
+        aggfunc='mean'
+    ).astype(float)
+    df_wide = df_wide.replace(SAGE_MISSING, float('nan'))
+    df_wide.index = pd.to_datetime(df_wide.index, utc=True)
+    
+    df_wide = df_wide.rename(columns={
+        'env.gas_resistance':    'gas_resistance',
+        'env.relative_humidity': 'humidity',
+        'env.pressure':          'pressure',
+        'env.temperature':       'temp',
+    })
+
+    df_wide = df_wide.resample(resample).mean(numeric_only=True)
+
+    df_wide['vsn']    = df['meta.vsn'].iloc[0]
+    df_wide['sensor'] = df['meta.sensor'].iloc[0]
+
+    return df_wide
