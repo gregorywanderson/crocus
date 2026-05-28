@@ -188,8 +188,13 @@ HUM = CROCUSSite(
     vsn       = 'W0A1',
     full_name = 'Humboldt Park',
     abbr      = 'HUM',
-    lat       = 41.9000,   # TBD
-    lon       = -87.7200,  # TBD
+    lat       = 41.905496,  
+    lon       = -87.703488, 
+    has_mfr     = True,
+    mfr       = {
+        'MNLA4O10F': {'label': 'site_1', 'lat': 41.9000, 'lon': -87.7200},
+        'MNLA4O10G': {'label': 'site_2', 'lat': 41.9000, 'lon': -87.7200},
+    },
 )
 
 
@@ -211,11 +216,10 @@ NEIU = CROCUSSite(
         'SX61NA0N': 'sugar_maple_3',
     },
     mfr       = {
-        # NB: CSV labels MNLA4O107 as North and MNLA4O108 as South, but VWC
-        # saturation data confirms the savannah (clay soil) is the southern
-        # site. Current mapping follows the data. Verify on Tuesday 2026-05-26.
-        'MNLA4O107': {'label': 'savannah', 'lat': 41.981459, 'lon': -87.717300},
-        'MNLA4O108': {'label': 'lawn',     'lat': 41.977505, 'lon': -87.716479},
+        # MNLA4O107 is North (lawn) and MNLA4O108 is South (savanna), but VWC
+        # saturation data confirms the savanna (clay soil) is the southern
+        'MNLA4O107': {'label': 'lawn', 'lat': 41.981459, 'lon': -87.717300},
+        'MNLA4O108': {'label': 'savannah', 'lat': 41.977505, 'lon': -87.716479},
     },
 )
 
