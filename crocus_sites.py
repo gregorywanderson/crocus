@@ -197,6 +197,17 @@ HUM = CROCUSSite(
     },
 )
 
+IBP = CROCUSSite(
+    vsn       = 'W07C', 
+    full_name = 'Indian Boundary Prairies (TNC/NEIU)',
+    abbr      = 'IBP',
+    lat       = 41.608158146,  
+    lon       = -87.7046499, 
+    has_mfr     = True,
+    mfr       = {
+        'MNLA4O10D': {'label': 'site_1', 'lat': 41.608168, 'lon': -87.7046499},
+    },
+)
 
 NEIU = CROCUSSite(
     vsn       = 'W08D',
@@ -280,4 +291,4 @@ UIC = CROCUSSite(
 # All sites — for iteration and filtering
 # ---------------------------------------------------------------------------
 
-ALL_SITES = [ATMOS, BIG, CCICS, CSU, HUM, NEIU, NU, SHEDD, UIC]
+ALL_SITES = [ATMOS, BIG, CCICS, CSU, HUM, IBP, NEIU, NU, SHEDD, UIC]
