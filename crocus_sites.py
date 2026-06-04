@@ -89,6 +89,7 @@ class CROCUSSite:
     # Site-specific additions — False by default
     has_mfr:     bool = False
     has_sapflow: bool = False
+    has_lorawan: bool = False
 
     sapflow: Optional[dict] = field(default=None, repr=False)
     mfr:     Optional[dict] = field(default=None, repr=False)
@@ -130,6 +131,7 @@ ATMOS = CROCUSSite(
     abbr      = 'ATMOS',
     lat       = 41.701597727,
     lon       = -87.995233141,
+    has_lorawan = False,
 )
 
 BIG = CROCUSSite(
@@ -138,6 +140,7 @@ BIG = CROCUSSite(
     abbr      = 'BIG',
     lat       = 41.777014004,
     lon       = -87.609733534,
+    has_lorawan = True,
     has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
@@ -166,6 +169,7 @@ CSU = CROCUSSite(
     abbr      = 'CSU',
     lat       = 41.719837344,
     lon       = -87.612858510,
+    has_lorawan = True,
     has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
@@ -184,12 +188,21 @@ CSU = CROCUSSite(
     },
 )
 
+DOWN = CROCUSSite(
+    vsn       = 'W09D',
+    full_name = 'Downers Grove',
+    abbr      = 'DOWN',
+    lat       = 41.782, #TBD
+    lon       = -88.030, #TBD
+)
+
 HUM = CROCUSSite(
     vsn       = 'W0A1',
     full_name = 'Humboldt Park',
     abbr      = 'HUM',
     lat       = 41.905496,  
     lon       = -87.703488, 
+    has_lorawan = True,
     has_mfr     = True,
     mfr       = {
         'MNLA4O10F': {'label': 'site_1', 'lat': 41.9000, 'lon': -87.7200},
@@ -203,6 +216,7 @@ IBP = CROCUSSite(
     abbr      = 'IBP',
     lat       = 41.608158146,  
     lon       = -87.7046499, 
+    has_lorawan = True,
     has_mfr     = True,
     mfr       = {
         'MNLA4O10D': {'label': 'site_1', 'lat': 41.608168, 'lon': -87.7046499},
@@ -215,6 +229,7 @@ NEIU = CROCUSSite(
     abbr      = 'NEIU',
     lat       = 41.980532992,
     lon       = -87.716623746,
+    has_lorawan = True,
     has_raingauge = False,  # RPi currently inactive
     has_mfr     = True,
     has_sapflow = True,
@@ -240,6 +255,7 @@ NU = CROCUSSite(
     abbr      = 'NU',
     lat       = 42.051407767,
     lon       = -87.677659396,
+    has_lorawan = True,
     has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
@@ -269,6 +285,7 @@ UIC = CROCUSSite(
     abbr      = 'UIC',
     lat       = 41.868532807,
     lon       = -87.645894840,
+    has_lorawan = True,
     has_mfr     = True,
     has_sapflow = True,
     sapflow   = {
@@ -286,9 +303,17 @@ UIC = CROCUSSite(
     },
 )
 
+VLPK = CROCUSSite(
+    vsn       = 'W095',
+    full_name = 'Villa Park',
+    abbr      = 'VLPK',
+    lat       = 41.8848846,
+    lon       = -87.978717,
+)
+
 
 # ---------------------------------------------------------------------------
 # All sites — for iteration and filtering
 # ---------------------------------------------------------------------------
 
-ALL_SITES = [ATMOS, BIG, CCICS, CSU, HUM, IBP, NEIU, NU, SHEDD, UIC]
+ALL_SITES = [ATMOS, BIG, CCICS, CSU, DOWN, HUM, IBP, NEIU, NU, SHEDD, UIC, VLPK]
