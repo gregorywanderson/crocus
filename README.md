@@ -17,6 +17,8 @@ network of Waggle/Sage nodes deployed across Chicago, Illinois.
 - **`crocus_sites.py`** — Site metadata for all CROCUS field locations including
   coordinates, sensor availability, and instrument serial number mappings.
 
+[![Open crocus_data_access.ipynb in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_data_access.ipynb)
+
 ## Installation
 
 ```bash
