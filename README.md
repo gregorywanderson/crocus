@@ -36,6 +36,16 @@ The notebook uses the helper module `coverage_utils.py`, which contains function
 
 The sensor coverage grid and node liveness grid answer related but different questions. A node can be alive and reporting system metrics even when one or more attached sensors are not reporting. For that reason, the notebook treats compute-host liveness and sensor coverage as separate layers of network status.
 
+### CROCUS Hydrean RG-15 DQ Analysias
+
+[![Open crocus\_rg15\_qc.ipynb in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_rg15_qc.ipynb)
+
+`crocus_rg15_qs.ipynb`
+
+Investigation of artifact signals in the Hydreon RG-15 optical rain gauge
+data across CROCUS sites. All analysis uses the RG-15 + WXT cross-validation
+framework developed in `crocus_precip.ipynb` — run that notebook first to
+populate `rain`, `wxt_rain`, `rg_hourly`, and `wxt_hourly` in scope.
 
 ## Installation
 
