@@ -6,7 +6,8 @@ both research use and undergraduate teaching.
 
 CROCUS instruments (Vaisala WXT536 weather stations, Vaisala AQT530 air-quality
 sensors, and others) are deployed across a set of Chicago-area sites and stream data
-to the [Sage Continuum / Waggle](https://sagecontinuum.org/) platform. A sample of CROCUS data products are published to
+to the [Sage Continuum / Waggle](https://sagecontinuum.org/) platform — the working
+record of the network. A small sample of QA/QC'd, resampled data was also published to
 [ESS-DIVE](https://ess-dive.lbl.gov/). This repository provides tools to work with
 **both** sources.
 
@@ -39,11 +40,12 @@ and **backfills are still in progress** — coverage is incomplete and varies by
 > Status: NEIU WXT complete (2023-05-05 → 2025-12-15); CCICS AQT/WXT and NU WXT in
 > progress. *(verify before publishing)*
 
-### 3. Official archives, from ESS-DIVE  ·  *authoritative record*
+### 3. Published sample, from ESS-DIVE  ·  *small reference set*
 
-Notebooks that download the published CROCUS data products from ESS-DIVE and produce
-quicklook plots. These are the official QA/QC'd records; coverage is **sparse** and
-present only where data was published (sites include NU, NEIU, CSU, UIC).
+Notebooks that download CROCUS data published to ESS-DIVE and produce quicklook plots.
+This is a **small, sparse sample** of the network's data — QA/QC'd and resampled, but
+covering only selected sites and windows where data was published (sites include NU,
+NEIU, CSU, UIC). Useful as a reference example rather than a complete record.
 
 - ESS-DIVE downloader — public, tokenless access to CROCUS packages.
 - `crocus_wxt_quicklook_essdive.ipynb` — quicklook for native ~10-second WXT data.
@@ -75,12 +77,12 @@ not directly comparable to the other sites' records.
 
 ## Cross-validating the record
 
-ESS-DIVE is intended to host the QA/QC'd, resampled version of what streams to Sage
-Continuum. The tools here access both sources, which also makes it possible to compare
-the published archives against the underlying Sage data — checking that values agree
-within the documented processing, and documenting metadata (units, `standard_name`,
-provenance) where it is incomplete. This is an ongoing, secondary aim of the repo, not
-a finished result.
+The ESS-DIVE sample was QA/QC'd and resampled from the same data that streams to Sage
+Continuum. Because the tools here access both sources, it is possible to compare the
+published sample against the underlying Sage data — checking that values agree within
+the documented processing, and noting metadata (units, `standard_name`, provenance)
+where it is incomplete. This is an ongoing, secondary aim of the repo, not a finished
+result.
 
 ---
 
@@ -124,14 +126,15 @@ crocus/
 
 - **CROCUS** — Community Research on Climate and Urban Science. <https://crocus-urban.org/>
 - **Sage Continuum / Waggle** — real-time sensor data platform. <https://sagecontinuum.org/>
-- **ESS-DIVE** — published CROCUS data products. <https://ess-dive.lbl.gov/>
+- **ESS-DIVE** — repository hosting a published sample of CROCUS data. <https://ess-dive.lbl.gov/>
 
 *(TODO: add funding/attribution language CROCUS asks collaborators to use, credit for
-the published ESS-DIVE data products, license, and a citation/DOI if you mint one.)*
+the published ESS-DIVE sample, and a citation/DOI if you mint one.)*
 
 ---
 
 ## License
 
-*(TODO: choose a license — e.g. MIT for code. Note that data products retain their
-original ESS-DIVE / CROCUS terms.)*
+This project is licensed under the GNU General Public License v3.0 (GPLv3), consistent
+with the other repositories in this account. See the `LICENSE` file for the full text.
+Data accessed through these tools retains its original ESS-DIVE / CROCUS / Sage terms.
