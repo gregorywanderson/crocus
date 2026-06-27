@@ -1,66 +1,59 @@
-# CROCUS Data Access
+# crocus
 
-Python notebooks and utilities for accessing sensor data from the
-[CROCUS](https://crocus-urban.org) (Community Research on Climate and Urban Science)
-network of Waggle/Sage nodes deployed across Chicago, Illinois.
+Python notebooks and scripts for accessing, processing, and visualizing data from
+the [CROCUS](https://crocus-urban.org/) urban climate sensor network — developed for
+both research use and undergraduate teaching.
 
-## Contents
+CROCUS instruments (Vaisala WXT536 weather stations, Vaisala AQT530 air-quality
+sensors, and others) are deployed across a set of Chicago-area sites and stream data
+to the [Sage Continuum / Waggle](https://sagecontinuum.org/) platform. A sample of CROCUS data products are published to
+[ESS-DIVE](https://ess-dive.lbl.gov/). This repository provides tools to work with
+**both** sources.
 
-- **`crocus_data_access.ipynb`** — Main notebook demonstrating how to query,
-  wrangle, and visualize data from CROCUS sensors including the Vaisala WXT536
-  weather transmitter, Vaisala AQT530 air quality transmitter, Hydreon RG-15
-  rain gauge, SFM1x sap flow meters, and ICT International MFR soil nodes.
+---
 
-[![Open crocus_data_access.ipynb in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_data_access.ipynb)
+## Three ways to get data
 
-- **`sage_utils.py`** — Query functions that wrap the Sage Data Client and
-  return clean wide-format DataFrames suitable for analysis and plotting.
+Pick the path that matches what you need. They are listed easiest-first.
 
-- **`crocus_sites.py`** — Site metadata for all CROCUS field locations including
-  coordinates, sensor availability, and instrument serial number mappings.
+### 1. Recent data, live from Sage Continuum  ·  *start here*
 
-### CROCUS Network and Sensor Coverage Dashboard
+Notebooks that query the Sage Data Client API directly for roughly the **last six
+months** of data. No large downloads, no credentials — they run as-is (including in
+Colab). This is the recommended on-ramp for students and for quick looks at current
+conditions.
 
-[![Open crocus\_network\_sensor\_coverage.ipynb in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_network_sensor_coverage.ipynb)
+- `crocus_data_access.ipynb` — query a site/instrument and plot recent observations.
 
-`crocus_network_sensor_coverage.ipynb` provides a quick operational view of the CROCUS network. It checks whether node compute hosts are currently reporting and whether the expected sensors at each site are returning recent data. The notebook is intended as a status and coverage dashboard rather than a detailed scientific analysis notebook.
+### 2. Historical high-frequency data, resampled from Sage  ·  *power users*
 
-The notebook uses the helper module `coverage_utils.py`, which contains functions for querying recent CROCUS data coverage and plotting the results. It includes tools to:
+A pipeline that downloads CROCUS's native high-frequency records from Sage and
+resamples them to **5-minute NetCDF archives**, with corrected vector-wind
+decomposition and per-bin rain increments. This is slower and requires more setup,
+and **backfills are still in progress** — coverage is incomplete and varies by site.
 
-* check whether individual sensors are reporting at a site,
-* summarize current sensor reporting status across the full CROCUS network,
-* plot a color-coded sensor coverage grid,
-* check compute-host liveness using `sys.uptime`,
-* join compute-host liveness information to the Sage node manifest so host roles such as `nxcore`, `rpi`, `rpi.lorawan`, and `nxagent` can be labeled,
-* plot a separate node liveness grid showing which compute hosts are reporting.
+- `crocus_store.py` — core download / resample / archive library.
+- `build_crocus_archive.py` — CLI driver (`--site`, `--instrument`, date range).
+- `run_backfill.sh` — shell wrapper that activates the conda env and runs detached.
 
-The sensor coverage grid and node liveness grid answer related but different questions. A node can be alive and reporting system metrics even when one or more attached sensors are not reporting. For that reason, the notebook treats compute-host liveness and sensor coverage as separate layers of network status.
+> Status: NEIU WXT complete (2023-05-05 → 2025-12-15); CCICS AQT/WXT and NU WXT in
+> progress. *(verify before publishing)*
 
-### CROCUS Hydrean RG-15 DQ Analysias
+### 3. Official archives, from ESS-DIVE  ·  *authoritative record*
 
-[![Open crocus\_rg15\_qc.ipynb in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_rg15_qc.ipynb)
+Notebooks that download the published CROCUS data products from ESS-DIVE and produce
+quicklook plots. These are the official QA/QC'd records; coverage is **sparse** and
+present only where data was published (sites include NU, NEIU, CSU, UIC).
 
-`crocus_rg15_qs.ipynb`
+- ESS-DIVE downloader — public, tokenless access to CROCUS packages.
+- `crocus_wxt_quicklook_essdive.ipynb` — quicklook for native ~10-second WXT data.
 
-Investigation of artifact signals in the Hydreon RG-15 optical rain gauge
-data across CROCUS sites. All analysis uses the RG-15 + WXT cross-validation
-framework developed in `crocus_precip.ipynb` — run that notebook first to
-populate `rain`, `wxt_rain`, `rg_hourly`, and `wxt_hourly` in scope.
+A note on these files: some ESS-DIVE archives do **not** carry unit attributes, so the
+quicklook notebooks supply units as named constants. The UIC "air quality" package is a
+heterogeneous collection of instruments rather than a standard AQT time series, and is
+not directly comparable to the other sites' records.
 
-## Installation
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-Set `SITE` to any available site object and run the notebook top to bottom:
-
-```python
-from crocus_sites import NEIU, CSU, NU   # import any site
-SITE = NEIU                               # set the active site
-```
+---
 
 ## CROCUS Network
 
@@ -78,11 +71,67 @@ SITE = NEIU                               # set the active site
 | SHEDD | Shedd Aquarium                               |
 | UIC   | University of Illinois Chicago               |
 | VLPK  | Villa Park |
+---
 
-## Further Reading
+## Cross-validating the record
 
-- [Sage Data Client](https://github.com/sagecontinuum/sage-data-client)
-- [Sage Portal](https://portal.sagecontinuum.org/nodes)
-- [CROCUS Instrument Cookbooks](https://crocus-urban.github.io/instrument-cookbooks/)
-- [CROCUS Data on ESS-DIVE](https://data.ess-dive.lbl.gov/portals/crocus/Data)
+ESS-DIVE is intended to host the QA/QC'd, resampled version of what streams to Sage
+Continuum. The tools here access both sources, which also makes it possible to compare
+the published archives against the underlying Sage data — checking that values agree
+within the documented processing, and documenting metadata (units, `standard_name`,
+provenance) where it is incomplete. This is an ongoing, secondary aim of the repo, not
+a finished result.
 
+---
+
+## Getting started
+
+```bash
+# clone
+git clone https://github.com/gregorywanderson/crocus.git
+cd crocus
+
+# environment  (TODO: provide environment.yml / requirements.txt)
+# core dependencies: sage-data-client, xarray, netCDF4, pandas, numpy, matplotlib
+```
+
+The Tier-1 notebooks need only a standard scientific-Python stack plus
+`sage-data-client` and can be run in Colab. The archive pipeline (Tier 2) additionally
+expects a conda environment; see `run_backfill.sh`.
+
+*(TODO: confirm exact dependency list and add an `environment.yml`.)*
+
+---
+
+## Repository layout
+
+```
+crocus/
+├── crocus_data_access.ipynb        # Tier 1: recent data, live from Sage
+├── crocus_wxt_quicklook_essdive.ipynb  # Tier 3: ESS-DIVE quicklook  (to be added)
+├── crocus_store.py                 # Tier 2: archive library
+├── build_crocus_archive.py         # Tier 2: CLI driver              (to be added)
+├── run_backfill.sh                 # Tier 2: backfill wrapper        (to be added)
+├── crocus_sites.py                 # site registry
+└── sage_utils.py                   # Sage query helpers
+```
+
+*(Marked items are not yet committed — remove the note as you upload them.)*
+
+---
+
+## Data sources & acknowledgments
+
+- **CROCUS** — Community Research on Climate and Urban Science. <https://crocus-urban.org/>
+- **Sage Continuum / Waggle** — real-time sensor data platform. <https://sagecontinuum.org/>
+- **ESS-DIVE** — published CROCUS data products. <https://ess-dive.lbl.gov/>
+
+*(TODO: add funding/attribution language CROCUS asks collaborators to use, credit for
+the published ESS-DIVE data products, license, and a citation/DOI if you mint one.)*
+
+---
+
+## License
+
+*(TODO: choose a license — e.g. MIT for code. Note that data products retain their
+original ESS-DIVE / CROCUS terms.)*
