@@ -25,6 +25,10 @@ Colab). This is the recommended on-ramp for students and for quick looks at curr
 conditions.
 
 - `crocus_data_access.ipynb` — query a site/instrument and plot recent observations.
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_data_access.ipynb)
+- `crocus_network_sensor_coverage.ipynb` — start-of-session health check: which compute
+  hosts are alive and which sensors are reporting, before you query data.
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_network_sensor_coverage.ipynb)
 
 ### 2. Historical high-frequency data, resampled from Sage  ·  *power users*
 
@@ -49,6 +53,7 @@ NEIU, CSU, UIC). Useful as a reference example rather than a complete record.
 
 - ESS-DIVE downloader — public, tokenless access to CROCUS packages.
 - `crocus_wxt_quicklook_essdive.ipynb` — quicklook for native ~10-second WXT data.
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_wxt_quicklook_essdive.ipynb)
 
 A note on these files: some ESS-DIVE archives do **not** carry unit attributes, so the
 quicklook notebooks supply units as named constants. The UIC "air quality" package is a
@@ -110,6 +115,7 @@ expects a conda environment; see `run_backfill.sh`.
 ```
 crocus/
 ├── crocus_data_access.ipynb        # Tier 1: recent data, live from Sage
+├── crocus_network_sensor_coverage.ipynb  # Tier 1: network/sensor health check
 ├── crocus_wxt_quicklook_essdive.ipynb  # Tier 3: ESS-DIVE quicklook  (to be added)
 ├── crocus_store.py                 # Tier 2: archive library
 ├── build_crocus_archive.py         # Tier 2: CLI driver              (to be added)
