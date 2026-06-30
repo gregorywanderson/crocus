@@ -46,14 +46,14 @@ Usage
     import crocus_store as cs
 
     # --- Build (one-time backfill) ---
-    cs.build_site(NEIU, instrument='wxt', outdir='archive')
+    cs.build_site(NEIU, instrument='wxt', outdir=DEFAULT_OUTDIR)
     # or the whole network:
     for site in ALL_SITES:
-        cs.build_site(site, instrument='wxt', outdir='archive')
+        cs.build_site(site, instrument='wxt', outdir=DEFAULT_OUTDIR)
 
     # --- Read (what students/collaborators call) ---
     ds = cs.load(NEIU, 'wxt', start='2024-06-01', end='2024-09-01',
-                 outdir='archive')
+                 outdir=DEFAULT_OUTDIR)
     temp = ds['temp'].sel(statistic='mean').to_series()   # a clean pandas Series
 """
 
@@ -74,6 +74,7 @@ import sage_data_client
 from sage_utils import SAGE_MISSING
 from crocus_sites import TEROS_DEPTHS  # noqa: F401  (kept for parity / future use)
 
+DEFAULT_OUTDIR = 'data/sage'
 
 # ---------------------------------------------------------------------------
 # Module constants
@@ -90,6 +91,7 @@ STATISTICS = ['mean', 'count', 'std']   # the statistic axis, shared by all vars
 # this until a fetch succeeds (which resets everything) or until the total time
 # spent waiting since the last success reaches OUTAGE_GIVEUP_SECONDS, at which
 # point it exits cleanly so the run can be resumed later.
+
 OUTAGE_CONSECUTIVE = 3
 OUTAGE_WAIT_SECONDS = 30 * 60          # 30 minutes
 OUTAGE_GIVEUP_SECONDS = 12 * 60 * 60   # 12 hours
@@ -377,7 +379,7 @@ def _filename(site, instrument, resample=RESAMPLE_INTERVAL):
     return f"{site.abbr}_{instrument}_{res}.nc"
 
 
-def write_store(ds, site, instrument, outdir='archive',
+def write_store(ds, site, instrument, outdir=DEFAULT_OUTDIR,
                 first_data=None, source_start=None, source_end=None,
                 resample=RESAMPLE_INTERVAL):
     """
@@ -443,7 +445,7 @@ def _chunk_path(outdir, site, instrument, c_start, c_end):
     return os.path.join(_chunk_dir(outdir, site, instrument), f"{tag}.nc")
 
 
-def build_site(site, instrument='wxt', outdir='archive',
+def build_site(site, instrument='wxt', outdir=DEFAULT_OUTDIR,
                start=None, end=None, resample=RESAMPLE_INTERVAL,
                chunk_days=3, verbose=True):
     """
@@ -685,7 +687,7 @@ def build_site(site, instrument='wxt', outdir='archive',
 # Stage 4 — read (what students / collaborators call)
 # ---------------------------------------------------------------------------
 
-def load(site, instrument='wxt', start=None, end=None, outdir='archive'):
+def load(site, instrument='wxt', start=None, end=None, outdir=DEFAULT_OUTDIR):
     """
     Load a site+instrument archive as an xarray.Dataset, optionally sliced to
     a time range. Reads ONLY the local NetCDF file — never touches Sage.
