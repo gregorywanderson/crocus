@@ -38,7 +38,7 @@ decomposition and per-bin rain increments. This is slower and requires more setu
 and **backfills are still in progress** — coverage is incomplete and varies by site.
 
 - `crocus_store.py` — core download / resample / archive library.
-- `build_crocus_archive.py` — CLI driver (`--site`, `--instrument`, date range).
+- `build_sage_archive.py` — CLI driver (`--site`, `--instrument`, date range).
 - `run_backfill.sh` — shell wrapper that activates the conda env and runs detached.
 
 > Status: NEIU WXT complete (2023-05-05 → 2025-12-15); CCICS AQT/WXT and NU WXT in
@@ -52,7 +52,7 @@ covering only selected sites and windows where data was published (sites include
 NEIU, CSU, UIC). Useful as a reference example rather than a complete record.
 
 - ESS-DIVE downloader — public, tokenless access to CROCUS packages.
-- `crocus_wxt_quicklook_essdive.ipynb` — quicklook for native ~10-second WXT data.
+- `essdive_wxt_quicklook.ipynb` — quicklook for native ~10-second WXT data.
   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_wxt_quicklook_essdive.ipynb)
 
 A note on these files: some ESS-DIVE archives do **not** carry unit attributes, so the
@@ -116,9 +116,9 @@ expects a conda environment; see `run_backfill.sh`.
 crocus/
 ├── crocus_data_access.ipynb        # Tier 1: recent data, live from Sage
 ├── crocus_network_sensor_coverage.ipynb  # Tier 1: network/sensor health check
-├── crocus_wxt_quicklook_essdive.ipynb  # Tier 3: ESS-DIVE quicklook  (to be added)
+├── essdive_wxt_quicklook.ipynb     # Tier 3: ESS-DIVE quicklook  
 ├── crocus_store.py                 # Tier 2: archive library
-├── build_crocus_archive.py         # Tier 2: CLI driver              (to be added)
+├── build_sage_archive.py           # Tier 2: CLI driver              (to be added)
 ├── run_backfill.sh                 # Tier 2: backfill wrapper        (to be added)
 ├── crocus_sites.py                 # site registry
 └── sage_utils.py                   # Sage query helpers
