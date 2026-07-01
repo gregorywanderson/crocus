@@ -53,7 +53,7 @@ NEIU, CSU, UIC). Useful as a reference example rather than a complete record.
 
 - ESS-DIVE downloader — public, tokenless access to CROCUS packages.
 - `essdive_wxt_quicklook.ipynb` — quicklook for native ~10-second WXT data.
-  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/crocus_wxt_quicklook_essdive.ipynb)
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/essdive_wxt_quicklook.ipynb)
 
 A note on these files: some ESS-DIVE archives do **not** carry unit attributes, so the
 quicklook notebooks supply units as named constants. The UIC "air quality" package is a
