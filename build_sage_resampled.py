@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_crocus_archive.py
+build_sage_resampled.py
 
 Command-line driver for backfilling the historic CROCUS 5-minute archive.
 
@@ -15,15 +15,15 @@ from the last completed chunk.
 Examples
 --------
     # One site, one instrument, an explicit window:
-    python build_crocus_archive.py --sites NEIU --instruments wxt \
+    python build_sage_resampled.py --sites NEIU --instruments wxt \
         --start 2024-06-01 --end 2024-09-01
 
     # Both of "my" sites, both instruments, auto-resolved start (probes for
     # first data), runs to now:
-    python build_crocus_archive.py --sites NEIU,CCICS --instruments wxt,aqt
+    python build_sage_resampled.py --sites NEIU,CCICS --instruments wxt,aqt
 
     # Smaller chunks for a very dense node, custom log:
-    python build_crocus_archive.py --sites NEIU --instruments wxt \
+    python build_sage_resampled.py --sites NEIU --instruments wxt \
         --chunk-days 1 --log neiu_wxt.log
 
 Resuming

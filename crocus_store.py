@@ -74,7 +74,7 @@ import sage_data_client
 from sage_utils import SAGE_MISSING
 from crocus_sites import TEROS_DEPTHS  # noqa: F401  (kept for parity / future use)
 
-DEFAULT_OUTDIR = 'data/sage'
+DEFAULT_OUTDIR = 'data/sage_resampled'
 
 # ---------------------------------------------------------------------------
 # Module constants
@@ -541,7 +541,13 @@ def build_site(site, instrument='wxt', outdir=DEFAULT_OUTDIR,
     # Fixed-width day-chunk fetch + aggregate, collect per-chunk tensors.
     # Day-scale chunks avoid the large-query failure where minority channels
     # are dropped from an over-large multi-channel response.
-    chunks = []
+    # NOTE: we do NOT accumulate chunk datasets in memory. Every chunk is
+    # checkpointed to disk as it completes; the final archive is assembled by
+    # streaming those checkpoint files back from disk after the loop. Holding
+    # all chunks in RAM caused unbounded memory growth (tens of GB) on long,
+    # dense backfills and on resume (which re-loaded every cached chunk).
+    # We track only whether any usable chunk was produced.
+    any_chunk = False
     expected_channels = set(spec['columns'].keys())
     ckpt_dir = _chunk_dir(outdir, site, instrument)
     os.makedirs(ckpt_dir, exist_ok=True)
@@ -575,14 +581,17 @@ def build_site(site, instrument='wxt', outdir=DEFAULT_OUTDIR,
         label = f"{c_start.date()}..{c_end.date()}"
         ckpt = _chunk_path(outdir, site, instrument, c_start, c_end)
 
-        # Resume: if this chunk is already checkpointed, load and skip the fetch.
+        # Resume: if this chunk is already checkpointed, note it and skip the
+        # fetch. Do NOT load it into memory — it will be streamed from disk at
+        # final assembly. We only peek at the time count for the log line.
         if os.path.exists(ckpt):
-            ds_chunk = xr.open_dataset(ckpt)
-            ds_chunk.load()          # read fully into memory so we can close
-            ds_chunk.close()
-            chunks.append(ds_chunk)
+            any_chunk = True
             if verbose:
-                n = ds_chunk.sizes.get('time', 0)
+                try:
+                    with xr.open_dataset(ckpt) as ds_peek:
+                        n = ds_peek.sizes.get('time', 0)
+                except Exception:
+                    n = 0
                 log.info("    %s: %d bins (cached, skipped)", label, n)
             i += 1
             continue
@@ -655,18 +664,42 @@ def build_site(site, instrument='wxt', outdir=DEFAULT_OUTDIR,
         ds_chunk.to_netcdf(tmp)
         os.replace(tmp, ckpt)
 
-        chunks.append(ds_chunk)
+        any_chunk = True
         if verbose:
             n = ds_chunk.sizes.get('time', 0)
             log.info("    %s: %d bins", label, n)
+        # Release this chunk's memory immediately; it now lives on disk as the
+        # checkpoint and will be streamed back at final assembly.
+        ds_chunk.close()
+        del ds_chunk
         i += 1
 
-    if not chunks:
+    if not any_chunk:
         if verbose:
             log.info("%s/%s: no data in window", site.abbr, instrument)
         return None
 
-    ds_all = xr.concat(chunks, dim='time')
+    # Assemble the final archive from the on-disk checkpoints rather than from
+    # memory. Open them lazily and concatenate; this keeps peak memory bounded
+    # by (roughly) the final archive size instead of the sum of all chunks.
+    ckpt_files = sorted(
+        os.path.join(ckpt_dir, f)
+        for f in os.listdir(ckpt_dir)
+        if f.endswith('.nc')
+    )
+    if not ckpt_files:
+        if verbose:
+            log.info("%s/%s: no checkpoint files to assemble", site.abbr, instrument)
+        return None
+
+    parts = []
+    for f in ckpt_files:
+        with xr.open_dataset(f) as _ds:
+            parts.append(_ds.load())
+    ds_all = xr.concat(parts, dim='time')
+    for _ds in parts:
+        _ds.close()
+    del parts
     ds_all = ds_all.sortby('time')
     # drop any duplicate bins at chunk seams
     _, keep_idx = np.unique(ds_all['time'].values, return_index=True)
