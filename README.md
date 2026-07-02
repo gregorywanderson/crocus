@@ -105,7 +105,7 @@ Pick the source that matches what you need; they are listed easiest-first.
 Notebooks that query the Sage Data Client API directly for roughly the **last six
 months** of data (Tier 1, raw). No large downloads, no credentials — they run as-is
 (including in Colab). This is the recommended on-ramp for students and for quick looks at
-current conditions. These notebooks can be used for older data, but data befor 2026 is very
+current conditions. These notebooks can be used for older data, but some data before 2026 is 
 high frequency leading to slow downloads and large files.
 
 - `sage_data_access.ipynb` — query a site/instrument and plot recent observations.
@@ -145,6 +145,10 @@ record. Downloads and assembled archives are written to `data/essdive/`.
 
 - `build_essdive_archive.ipynb` — public, tokenless download of CROCUS ESS-DIVE packages,
   assembled into per-site/instrument NetCDF archives.
+- `audit_essdive.ipynb` — assesses the assembled archives: checks metadata quality
+  (units, `standard_name`, physically plausible value ranges) and visualizes data
+  coverage (a site × month heatmap of how complete each archive is). Read-only; run it
+  after `build_essdive_archive.ipynb` to see what the downloaded sample actually contains.
 - `essdive_wxt_quicklook.ipynb` — quicklook for the ESS-DIVE WXT data.
   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/essdive_wxt_quicklook.ipynb)
 
@@ -165,7 +169,8 @@ The repository follows a small, consistent naming convention:
   published (e.g. `build_essdive_archive` — from ESS-DIVE, archived as-is).
 - **Consumer notebooks** (quicklooks, audits) are named by the **product they read**,
   since they perform no transformation: `resampled_*_quicklook` reads the Sage-derived
-  resampled archive; `essdive_*_quicklook` reads the ESS-DIVE archive.
+  resampled archive; `essdive_*_quicklook` reads the ESS-DIVE archive; `audit_essdive`
+  assesses the ESS-DIVE archive.
 - **Live-Sage notebooks** carry the `sage_` prefix because they query the Sage API
   directly (`sage_data_access`, `sage_network_sensor_coverage`).
 - **Project-level libraries** keep the `crocus_` prefix because they are scoped to the
@@ -236,6 +241,7 @@ crocus/
 ├── resampled_wxt_quicklook.ipynb       # quicklook of resampled WXT archive
 ├── resampled_aqt_quicklook.ipynb       # quicklook of resampled AQT archive
 ├── build_essdive_archive.ipynb         # download + assemble ESS-DIVE packages
+├── audit_essdive.ipynb                 # metadata + coverage audit of ESS-DIVE archives
 ├── essdive_wxt_quicklook.ipynb         # ESS-DIVE WXT quicklook
 ├── reverse_engineer_essdive.ipynb      # provenance check of the ESS-DIVE processing
 ├── crocus_sites.py                     # site registry (project-level)
