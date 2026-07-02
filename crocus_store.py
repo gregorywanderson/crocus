@@ -337,24 +337,26 @@ def aggregate_bins(df_raw, instrument, resample=RESAMPLE_INTERVAL):
 # Deployment-date probing
 # ---------------------------------------------------------------------------
 
-def find_first_data(site, instrument, search_start='2023-01-01',
+def find_first_data(site, instrument, search_start=None,
                     search_end=None, step_days=30):
     """
     Find the approximate first date a node reported data for an instrument by
     probing forward in coarse steps with cheap head=1 queries.
 
+    If search_start is None, it defaults to the site's recorded deployment
+    date for this instrument (crocus_sites), falling back to '2023-01-01' when
+    no deployment date is available. Starting the probe at the deployment date
+    avoids querying years of guaranteed-empty pre-deployment time.
+
     Returns a pandas.Timestamp (UTC, floored to the day) of the first month
     in which data appears, or None if no data found in the search range.
-
-    Coarse by design (month granularity): the backfill starts at the floor of
-    this date, so a slightly early start just produces empty leading bins,
-    which is harmless.
     """
     spec = INSTRUMENTS[instrument]
+    if search_start is None:
+        search_start = site.deployment_start(instrument) or '2023-01-01'
     start = pd.Timestamp(search_start, tz='UTC')
     end = (pd.Timestamp(search_end, tz='UTC') if search_end
            else pd.Timestamp.now(tz='UTC'))
-
     probe = start
     while probe < end:
         probe_end = probe + pd.Timedelta(days=step_days)
