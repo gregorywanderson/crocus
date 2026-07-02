@@ -113,6 +113,9 @@ high frequency leading to slow downloads and large files.
 - `sage_network_sensor_coverage.ipynb` — start-of-session health check: which compute
   hosts are alive and which sensors are reporting, before you query data.
   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/sage_network_sensor_coverage.ipynb)
+- sage_sapflow.ipynb - query a site and plot recent sapflow observations
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gregorywanderson/crocus/blob/main/sage_sapflow.ipynb)
+
 
 ### 2. Historical data, resampled from Sage  ·  *power users*
 
