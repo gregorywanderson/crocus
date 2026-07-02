@@ -173,8 +173,15 @@ The repository follows a small, consistent naming convention:
   assesses the ESS-DIVE archive.
 - **Live-Sage notebooks** carry the `sage_` prefix because they query the Sage API
   directly (`sage_data_access`, `sage_network_sensor_coverage`).
+- **Topic-analysis notebooks** are organized by scientific topic and task rather than by
+  a single data source, and keep the `crocus_` prefix. These query live and/or multiple
+  sources around a question rather than reading one stored archive — for example
+  `crocus_precip` (precipitation cross-validation across RG-15, WXT, ASOS, and CoCoRaHS)
+  and `crocus_rg15_qc` (RG-15 data-quality analysis). Because they are not tied to one
+  source or archive, the source-based naming above does not apply to them.
 - **Project-level libraries** keep the `crocus_` prefix because they are scoped to the
-  CROCUS project rather than to any one data source (`crocus_store.py`, `crocus_sites.py`).
+  CROCUS project rather than to any one data source (`crocus_store.py`, `crocus_sites.py`,
+  `crocus_precip.py`).
 
 Data lives under `data/`, organized by provenance: `data/sage_resampled/` and
 `data/essdive/`.
