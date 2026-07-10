@@ -1,4 +1,21 @@
-matplotlib
-pandas
-sage-data-client
+# Third-party dependencies for the crocus repository (unpinned).
+#
+# Local modules are NOT listed here (they are repo files, not PyPI packages):
+#   crocus_store, crocus_sites, plot_utils, plot_hourly_heatmap,
+#   qaqc_inventory, sage_utils
+#
+# Cross-repo: plot_utils imports `aqi_colors`, which lives in the air_quality
+# repo (reached via a sys.path bridge). It is not pip-installable; the
+# air_quality repo must be checked out alongside crocus/. See README.
 
+numpy
+pandas
+matplotlib
+xarray
+netCDF4          # xarray NetCDF backend -- required to open the .nc archives,
+                 # even though nothing imports it directly
+sage-data-client
+suntime
+pytz
+windrose
+ipython
