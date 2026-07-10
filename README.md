@@ -127,12 +127,14 @@ progress** — coverage is incomplete and varies by site. Archives are written t
 
 - `crocus_store.py` — core download / resample / archive library.
 - `build_sage_resampled.py` — CLI driver (`--sites`, `--instruments`, date range).
-- `run_backfill.sh` — shell wrapper that activates the conda env and runs one build
-  detached.
 - `backfill_all.sh` — orchestrates builds across many sites at bounded concurrency,
   breadth-first and resumable.
 - `resampled_wxt_quicklook.ipynb`, `resampled_aqt_quicklook.ipynb` — quicklook plots of
   the finished 5-minute archives.
+- `resampled_ozone_study.ipynb` — ozone / NO2 / wind-rose and lake-breeze analysis of
+  the resampled AQT + WXT archives (reads the archives; performs no resampling).
+- `aqt_calibration_drift.ipynb` — multi-year overlay of AQT channels on a common
+  Jan-Dec axis to surface sensor calibration drift over deployment time.
 
 > Status: backfills in progress; coverage is partial and varies by site and instrument.
 > Verify actual coverage from the archives themselves before relying on any date range.
@@ -232,7 +234,7 @@ cd crocus
 
 The live-Sage notebooks (source 1) need only a standard scientific-Python stack plus
 `sage-data-client` and can be run in Colab. The archive pipeline (source 2) additionally
-expects a conda environment; see `run_backfill.sh`.
+expects a conda environment; see `backfill_all.sh`.
 
 *(TODO: confirm exact dependency list and add an `environment.yml`.)*
 
@@ -246,7 +248,6 @@ crocus/
 ├── sage_network_sensor_coverage.ipynb  # Tier 1: network/sensor health check
 ├── crocus_store.py                     # Tier 2: archive library
 ├── build_sage_resampled.py             # Tier 2: CLI driver (from Sage -> resampled)
-├── run_backfill.sh                     # Tier 2: single-build backfill wrapper
 ├── backfill_all.sh                     # Tier 2: multi-site backfill orchestrator
 ├── resampled_wxt_quicklook.ipynb       # quicklook of resampled WXT archive
 ├── resampled_aqt_quicklook.ipynb       # quicklook of resampled AQT archive
