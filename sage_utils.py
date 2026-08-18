@@ -367,6 +367,12 @@ def query_mfr(site, start, end=None):
     if df.empty:
         return {}
 
+    # Radiation channels (SN500: in/out short/longwave) come from the
+    # flozano/lorawan-listener plugin but carry the same meta.serial_number_tag
+    # as the Teros/HFP/ATH channels, so the per-serial subset below captures
+    # them alongside the soil variables — no special handling needed.
+    RADIATION = ['in_shortwave', 'out_shortwave', 'in_longwave', 'out_longwave']
+
     result = {}
 
     for serial, info in site.mfr.items():
@@ -387,20 +393,23 @@ def query_mfr(site, start, end=None):
             'barometric_pressure':     'pressure',
             'relative_humidity':       'humidity',
             'vapour_pressure_deficit': 'vpd',
-            'in_shortwave':            'in_shortwave',
-            'out_shortwave':           'out_shortwave',
-            'in_longwave':             'in_longwave',
-            'out_longwave':            'out_longwave',
             'heat_flux':               'heat_flux',
             'battery_voltage':         'battery_voltage',
             'solar_voltage':           'solar_voltage',
             **TEROS_DEPTHS,
         })
+
+        # Guarantee radiation columns exist even if a given window/node
+        # returned none of them, so downstream code can rely on their presence.
+        for col in RADIATION:
+            if col not in df_wide.columns:
+                df_wide[col] = float('nan')
+
         df_wide['vsn']    = site.vsn
         df_wide['serial'] = serial
 
         result[info['label']] = df_wide
-        
+
     return result
 
 
